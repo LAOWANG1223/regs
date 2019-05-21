@@ -1,0 +1,103 @@
+#####################         平均积分           ########################
+###  用队员积分排名语句进行筛选后聚合得到平均分，注意替换日期和人员   ###
+
+
+#####################队员积分排名(视图简化版)#########
+
+select cwd_user.display_name,point_res.* from cwd_user 
+left join
+(
+select issue_body.assignee TeamMember , sum(issue_body.TIMEORIGINALESTIMATE/3600/8) as Points ,sum(issue_body.recordworklog/3600/8) worklog
+from JiraIssueWithWorklog issue_body
+where issue_body.actual_status in ("Done","Resolved","Closed") #状态是完成
+  and issue_body.recordworklog > 0 #有实际工时录入
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#计划完成时间是当月
+	group by issue_body.assignee
+) point_res
+on point_res.teamMember = cwd_user.user_name
+where cwd_user.user_name in (
+#   物流团队
+"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai",
+#   贸易报关团队"
+"jason.chen","hyj","coy","alisali","aiker","anniewu","edenma",
+#   职能团队 
+"ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu",
+# 测试团队 
+"lisa","tonya","wenguangyan","keke.shu","alice.li","elizacheng",
+#   产品经理
+"cindy","anne","code","juan","xiang","jacky","elsa","georgexie","ashley",
+#   交互设计 
+"baku","allen.chen",
+#   视觉设计
+"jack.zhu","kiki.ding",
+#   业务专家 
+"william",
+# 运维团队 
+"koala","dream","paulhu"
+)
+order by Points desc############
+
+#####################查看积分任务明细(视图简化版)#####################
+select concat(issue_body.project_key_value,"-",issue_body.issuenum) AS Jira_Key ,issue_body.ASSIGNEE,issue_body.*
+from JiraIssueWithWorklog issue_body
+where issue_body.actual_status in ("Done","Resolved","Closed") #状态是完成
+  and issue_body.recordworklog > 0 #有实际工时录入
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#计划完成时间是当月
+
+#完整的积分详细视图
+ALTER VIEW JiraIssueWithWorklog as
+select issue_work_log.issueLogWork RecordWorklog,issue_status.pname actual_status,jira_project.pkey project_key_value, issue_body.*
+from jiraissue issue_body
+left join 
+issueIDwithWorklog issue_work_log on issue_body.ID = issue_work_log.issueid
+left join issuestatus issue_status on issue_body.issuestatus=issue_status.ID
+left join project jira_project on jira_project.id = issue_body.project
+
+#issue的工时录入视图
+create VIEW issueIDwithWorklog as
+select 
+work_log.issueid,sum(work_log.timeworked) issueLogWork
+from worklog work_log 
+group by work_log.issueid
+
+#####################队员积分排名#####################
+select count(teamissue.points) teamAveragePoints from
+(
+select issue_body.assignee TeamMember , sum(TIMEORIGINALESTIMATE/3600/8) as Points ,issue_work_log.issueLogWork RecordWorklog,issue_status.pname actual_status, issue_body.*
+from jiraissue issue_body
+left join 
+(select 
+work_log.issueid,sum(work_log.timeworked) issueLogWork
+from worklog work_log 
+group by work_log.issueid) issue_work_log on issue_body.ID = issue_work_log.issueid
+left join issuestatus issue_status on issue_body.issuestatus=issue_status.ID 
+where issue_status.pname in ("Done","Resolved","Closed") #状态是完成
+  and issue_work_log.issueLogWork > 0 #有实际工时录入
+	and issue_body.duedate > "2019-04-01" and issue_body.duedate <"2019-05-01"#计划完成时间是当月
+	#技术团队
+	#and issue_body.assignee in ("jason.chen","hyj","coy","ying","lynen","wind","gray","shaynegao","smile.yin","alisali","sheny","titihou","aiker","puyu","loriye","damonwang","anniewu","hangwang","nicolasni","shouwencai","cedarzhong","billowwu","edenma")
+	#   产品经理
+	#and issue_body.assignee in ("cindy","anne","code","juan","xiang","jacky","elsa","georgexie","ashley")
+	group by issue_body.assignee
+	order by Points desc
+) teamissue
+
+#####################查看积分明细(任务)#####################
+select count(*) from
+(
+select concat(jira_project.pkey,"-",issue_body.issuenum) AS Jira_Key, issue_body.SUMMARY,issue_body.ASSIGNEE,issue_body.DUEDATE,issue_body.CREATED,issue_body.UPDATED,issue_body.REPORTER,issue_body.CREATOR
+from jiraissue issue_body
+left join 
+(select 
+work_log.issueid,sum(work_log.timeworked) issueLogWork
+from worklog work_log 
+group by work_log.issueid) issue_work_log
+on issue_body.ID = issue_work_log.issueid
+left join issuestatus issue_status on issue_body.issuestatus=issue_status.ID 
+left join project jira_project on jira_project.id = issue_body.project
+where issue_status.pname in ("Done","Resolved","Closed") #状态是完成
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#计划完成时间是当月
+	and issue_work_log.issueLogWork > 0#有实际工时录入
+  #and issue_body.ASSIGNEE in () #筛选需要查看的人员
+	#and concat(jira_project.pkey,"-",issue_body.issuenum) = "DEVS-1162" #筛选需要查看的tickt
+) a
