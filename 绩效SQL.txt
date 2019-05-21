@@ -1,50 +1,50 @@
-#####################         Æ½¾ù»ı·Ö           ########################
-###  ÓÃ¶ÓÔ±»ı·ÖÅÅÃûÓï¾ä½øĞĞÉ¸Ñ¡ºó¾ÛºÏµÃµ½Æ½¾ù·Ö£¬×¢ÒâÌæ»»ÈÕÆÚºÍÈËÔ±   ###
+#####################         å¹³å‡ç§¯åˆ† 2019 0521  ########################
+###  ç”¨é˜Ÿå‘˜ç§¯åˆ†æ’åè¯­å¥è¿›è¡Œç­›é€‰åèšåˆå¾—åˆ°å¹³å‡åˆ†ï¼Œæ³¨æ„æ›¿æ¢æ—¥æœŸå’Œäººå‘˜   ###
 
 
-#####################¶ÓÔ±»ı·ÖÅÅÃû(ÊÓÍ¼¼ò»¯°æ)#########
+#####################é˜Ÿå‘˜ç§¯åˆ†æ’å(è§†å›¾ç®€åŒ–ç‰ˆ)#########
 
 select cwd_user.display_name,point_res.* from cwd_user 
 left join
 (
 select issue_body.assignee TeamMember , sum(issue_body.TIMEORIGINALESTIMATE/3600/8) as Points ,sum(issue_body.recordworklog/3600/8) worklog
 from JiraIssueWithWorklog issue_body
-where issue_body.actual_status in ("Done","Resolved","Closed") #×´Ì¬ÊÇÍê³É
-  and issue_body.recordworklog > 0 #ÓĞÊµ¼Ê¹¤Ê±Â¼Èë
-	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#¼Æ»®Íê³ÉÊ±¼äÊÇµ±ÔÂ
+where issue_body.actual_status in ("Done","Resolved","Closed") #çŠ¶æ€æ˜¯å®Œæˆ
+  and issue_body.recordworklog > 0 #æœ‰å®é™…å·¥æ—¶å½•å…¥
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#è®¡åˆ’å®Œæˆæ—¶é—´æ˜¯å½“æœˆ
 	group by issue_body.assignee
 ) point_res
 on point_res.teamMember = cwd_user.user_name
 where cwd_user.user_name in (
-#   ÎïÁ÷ÍÅ¶Ó
+#   ç‰©æµå›¢é˜Ÿ
 "wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai",
-#   Ã³Ò×±¨¹ØÍÅ¶Ó"
+#   è´¸æ˜“æŠ¥å…³å›¢é˜Ÿ"
 "jason.chen","hyj","coy","alisali","aiker","anniewu","edenma",
-#   Ö°ÄÜÍÅ¶Ó 
+#   èŒèƒ½å›¢é˜Ÿ 
 "ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu",
-# ²âÊÔÍÅ¶Ó 
+# æµ‹è¯•å›¢é˜Ÿ 
 "lisa","tonya","wenguangyan","keke.shu","alice.li","elizacheng",
-#   ²úÆ·¾­Àí
+#   äº§å“ç»ç†
 "cindy","anne","code","juan","xiang","jacky","elsa","georgexie","ashley",
-#   ½»»¥Éè¼Æ 
+#   äº¤äº’è®¾è®¡ 
 "baku","allen.chen",
-#   ÊÓ¾õÉè¼Æ
+#   è§†è§‰è®¾è®¡
 "jack.zhu","kiki.ding",
-#   ÒµÎñ×¨¼Ò 
+#   ä¸šåŠ¡ä¸“å®¶ 
 "william",
-# ÔËÎ¬ÍÅ¶Ó 
+# è¿ç»´å›¢é˜Ÿ 
 "koala","dream","paulhu"
 )
 order by Points desc############
 
-#####################²é¿´»ı·ÖÈÎÎñÃ÷Ï¸(ÊÓÍ¼¼ò»¯°æ)#####################
+#####################æŸ¥çœ‹ç§¯åˆ†ä»»åŠ¡æ˜ç»†(è§†å›¾ç®€åŒ–ç‰ˆ)#####################
 select concat(issue_body.project_key_value,"-",issue_body.issuenum) AS Jira_Key ,issue_body.ASSIGNEE,issue_body.*
 from JiraIssueWithWorklog issue_body
-where issue_body.actual_status in ("Done","Resolved","Closed") #×´Ì¬ÊÇÍê³É
-  and issue_body.recordworklog > 0 #ÓĞÊµ¼Ê¹¤Ê±Â¼Èë
-	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#¼Æ»®Íê³ÉÊ±¼äÊÇµ±ÔÂ
+where issue_body.actual_status in ("Done","Resolved","Closed") #çŠ¶æ€æ˜¯å®Œæˆ
+  and issue_body.recordworklog > 0 #æœ‰å®é™…å·¥æ—¶å½•å…¥
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#è®¡åˆ’å®Œæˆæ—¶é—´æ˜¯å½“æœˆ
 
-#ÍêÕûµÄ»ı·ÖÏêÏ¸ÊÓÍ¼
+#å®Œæ•´çš„ç§¯åˆ†è¯¦ç»†è§†å›¾
 ALTER VIEW JiraIssueWithWorklog as
 select issue_work_log.issueLogWork RecordWorklog,issue_status.pname actual_status,jira_project.pkey project_key_value, issue_body.*
 from jiraissue issue_body
@@ -53,14 +53,14 @@ issueIDwithWorklog issue_work_log on issue_body.ID = issue_work_log.issueid
 left join issuestatus issue_status on issue_body.issuestatus=issue_status.ID
 left join project jira_project on jira_project.id = issue_body.project
 
-#issueµÄ¹¤Ê±Â¼ÈëÊÓÍ¼
+#issueçš„å·¥æ—¶å½•å…¥è§†å›¾
 create VIEW issueIDwithWorklog as
 select 
 work_log.issueid,sum(work_log.timeworked) issueLogWork
 from worklog work_log 
 group by work_log.issueid
 
-#####################¶ÓÔ±»ı·ÖÅÅÃû#####################
+#####################é˜Ÿå‘˜ç§¯åˆ†æ’å#####################
 select count(teamissue.points) teamAveragePoints from
 (
 select issue_body.assignee TeamMember , sum(TIMEORIGINALESTIMATE/3600/8) as Points ,issue_work_log.issueLogWork RecordWorklog,issue_status.pname actual_status, issue_body.*
@@ -71,18 +71,18 @@ work_log.issueid,sum(work_log.timeworked) issueLogWork
 from worklog work_log 
 group by work_log.issueid) issue_work_log on issue_body.ID = issue_work_log.issueid
 left join issuestatus issue_status on issue_body.issuestatus=issue_status.ID 
-where issue_status.pname in ("Done","Resolved","Closed") #×´Ì¬ÊÇÍê³É
-  and issue_work_log.issueLogWork > 0 #ÓĞÊµ¼Ê¹¤Ê±Â¼Èë
-	and issue_body.duedate > "2019-04-01" and issue_body.duedate <"2019-05-01"#¼Æ»®Íê³ÉÊ±¼äÊÇµ±ÔÂ
-	#¼¼ÊõÍÅ¶Ó
+where issue_status.pname in ("Done","Resolved","Closed") #çŠ¶æ€æ˜¯å®Œæˆ
+  and issue_work_log.issueLogWork > 0 #æœ‰å®é™…å·¥æ—¶å½•å…¥
+	and issue_body.duedate > "2019-04-01" and issue_body.duedate <"2019-05-01"#è®¡åˆ’å®Œæˆæ—¶é—´æ˜¯å½“æœˆ
+	#æŠ€æœ¯å›¢é˜Ÿ
 	#and issue_body.assignee in ("jason.chen","hyj","coy","ying","lynen","wind","gray","shaynegao","smile.yin","alisali","sheny","titihou","aiker","puyu","loriye","damonwang","anniewu","hangwang","nicolasni","shouwencai","cedarzhong","billowwu","edenma")
-	#   ²úÆ·¾­Àí
+	#   äº§å“ç»ç†
 	#and issue_body.assignee in ("cindy","anne","code","juan","xiang","jacky","elsa","georgexie","ashley")
 	group by issue_body.assignee
 	order by Points desc
 ) teamissue
 
-#####################²é¿´»ı·ÖÃ÷Ï¸(ÈÎÎñ)#####################
+#####################æŸ¥çœ‹ç§¯åˆ†æ˜ç»†(ä»»åŠ¡)#####################
 select count(*) from
 (
 select concat(jira_project.pkey,"-",issue_body.issuenum) AS Jira_Key, issue_body.SUMMARY,issue_body.ASSIGNEE,issue_body.DUEDATE,issue_body.CREATED,issue_body.UPDATED,issue_body.REPORTER,issue_body.CREATOR
@@ -95,9 +95,9 @@ group by work_log.issueid) issue_work_log
 on issue_body.ID = issue_work_log.issueid
 left join issuestatus issue_status on issue_body.issuestatus=issue_status.ID 
 left join project jira_project on jira_project.id = issue_body.project
-where issue_status.pname in ("Done","Resolved","Closed") #×´Ì¬ÊÇÍê³É
-	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#¼Æ»®Íê³ÉÊ±¼äÊÇµ±ÔÂ
-	and issue_work_log.issueLogWork > 0#ÓĞÊµ¼Ê¹¤Ê±Â¼Èë
-  #and issue_body.ASSIGNEE in () #É¸Ñ¡ĞèÒª²é¿´µÄÈËÔ±
-	#and concat(jira_project.pkey,"-",issue_body.issuenum) = "DEVS-1162" #É¸Ñ¡ĞèÒª²é¿´µÄtickt
+where issue_status.pname in ("Done","Resolved","Closed") #çŠ¶æ€æ˜¯å®Œæˆ
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#è®¡åˆ’å®Œæˆæ—¶é—´æ˜¯å½“æœˆ
+	and issue_work_log.issueLogWork > 0#æœ‰å®é™…å·¥æ—¶å½•å…¥
+  #and issue_body.ASSIGNEE in () #ç­›é€‰éœ€è¦æŸ¥çœ‹çš„äººå‘˜
+	#and concat(jira_project.pkey,"-",issue_body.issuenum) = "DEVS-1162" #ç­›é€‰éœ€è¦æŸ¥çœ‹çš„tickt
 ) a
