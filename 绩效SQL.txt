@@ -44,10 +44,10 @@ select * from 2019MayTeamPointsView
 #####                             (注意jira里面的只会统计子任务，而不统计关联的故障)                  #####         
 ###########################################################################################################
 
-select jira_key,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
+select jira_key,a.SUMMARY,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
 (
 
-			select POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation, issueidwithworklog.*  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation, issueidwithworklog.*  from 
 			(
 			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
 			issue_link.SOURCE TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,
@@ -65,7 +65,7 @@ select jira_key,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
 			#where issueidwithworklog.issueLogWork is not null
 			union all
-			select POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,issueidwithworklog.*  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,issueidwithworklog.*  from 
 			(
 			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
 			#issue_link.SOURCE TASK_ID,
@@ -84,7 +84,7 @@ select jira_key,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
 			#where issueidwithworklog.issueLogWork is not null
 ) a
-group by a.jira_key
+group by a.jira_key, a.SUMMARY
 having a.JIRA_KEY in ('TMSI-2140','TMSI-2811','TMSI-3291','TMSI-3686')
 
 
