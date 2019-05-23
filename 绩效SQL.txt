@@ -1,5 +1,5 @@
 ###############################################################################################################
-#####                              信息部绩效积分工具(注意先更新视图和任务语句的时间)                   #######
+#####                              ID001 : 信息部绩效积分工具(注意先更新视图和任务语句的时间)           #######
 ###############################################################################################################
 
 #[目前还缺少的逻辑]查找延误的任务 延误1天扣除30%积分 3天50% 延误5天 100% ， 未完成延误任务前不分配其他任务(积分) 
@@ -40,17 +40,17 @@ select * from 2019MayTeamPointsView
 
 
 ###########################################################################################################
-#####            查找某个故事/故障/任务所关联的任务对应的积分和录入工时 (更新jira_key查询)            #####
-#####                             (注意jira里面的只会统计子任务，而不统计关联的故障)                  #####         
+#####      ID002   查找某个故事/故障/任务所关联的任务对应的积分和录入工时 (更新jira_key查询)          #####
+#####              (注意:不统计关联的故障和bug)                                                       #####         
 ###########################################################################################################
 
 select jira_key,a.SUMMARY,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
 (
 
-			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation, issueidwithworklog.*  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation, task_issue_type,issueidwithworklog.*  from 
 			(
 			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
-			issue_link.SOURCE TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,
+			issue_link.SOURCE TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation, task_issue.issuetype task_issue_type,
 			#issue_link.DESTINATION TASK_ID, 
 			issue_body.* from  jiraissue issue_body
 			left join project pro
@@ -65,11 +65,11 @@ select jira_key,a.SUMMARY,count(jira_key) linked_ticket_count,sum(task_estimatio
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
 			#where issueidwithworklog.issueLogWork is not null
 			union all
-			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,issueidwithworklog.*  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,issueidwithworklog.*  from 
 			(
 			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
 			#issue_link.SOURCE TASK_ID,
-			issue_link.DESTINATION TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,
+			issue_link.DESTINATION TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,task_issue.issuetype    task_issue_type,
 			issue_body.* from  jiraissue issue_body
 			left join project pro
 			on issue_body.project = pro.id 
@@ -84,8 +84,14 @@ select jira_key,a.SUMMARY,count(jira_key) linked_ticket_count,sum(task_estimatio
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
 			#where issueidwithworklog.issueLogWork is not null
 ) a
+#不计算故障任务的积分和工时
+where a.task_issue_type not in (10500,10600)
 group by a.jira_key, a.SUMMARY
-having a.JIRA_KEY in ('TMSI-2140','TMSI-2811','TMSI-3291','TMSI-3686')
+having a.JIRA_KEY in 
+#仓单功能
+('TMSI-2140','TMSI-2811','TMSI-3291','TMSI-3686')
+#核注请单
+#('TMSI-3290','TMSI-2627','TMSI-2898','TMSI-3685')
 
 
 
