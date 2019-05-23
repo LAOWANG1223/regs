@@ -1,9 +1,8 @@
-##   [目前还缺少的逻辑]查找延误的任务 延误1天扣除30%积分 3天50% 延误5天 100% ，未完成延误任务前不分配其他任务(积分)  ###
+###############################################################################################################
+#####                              信息部绩效积分工具(注意先更新视图和任务语句的时间)                   #######
+###############################################################################################################
 
-#####注意先更新视图和任务语句的时间########################
-
-#VARCHAR start_date = '2019-04-01'
-#VARCHAR end_date = '2019-05-01'
+#[目前还缺少的逻辑]查找延误的任务 延误1天扣除30%积分 3天50% 延误5天 100% ， 未完成延误任务前不分配其他任务(积分) 
 
 alter view 2019mayteampointswithoutnameview as
 select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`TIMEORIGINALESTIMATE` / 3600) / 8)) AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-05-01') and (`issue_body`.`DUEDATE` < '2019-06-01')) group by `issue_body`.`ASSIGNEE`
@@ -38,6 +37,60 @@ select "Operation Team" as Team,  Operation_Team_Average_View.* from Operation_T
 
 ##############                      每个人的积分                        ####################
 select * from 2019MayTeamPointsView
+
+
+###########################################################################################################
+#####            查找某个故事/故障/任务所关联的任务对应的积分和录入工时 (更新jira_key查询)            #####
+#####                             (注意jira里面的只会统计子任务，而不统计关联的故障)                  #####         
+###########################################################################################################
+
+select jira_key,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
+(
+
+			select POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation, issueidwithworklog.*  from 
+			(
+			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
+			issue_link.SOURCE TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,
+			#issue_link.DESTINATION TASK_ID, 
+			issue_body.* from  jiraissue issue_body
+			left join project pro
+			on issue_body.project = pro.id 
+			left join issuelink issue_link
+			on 
+			issue_link.DESTINATION = issue_body.id 
+			left join jiraissue task_issue
+			on task_issue.id = issue_link.SOURCE
+			) POINT_TASK
+			left join issueidwithworklog
+			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
+			#where issueidwithworklog.issueLogWork is not null
+			union all
+			select POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,issueidwithworklog.*  from 
+			(
+			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
+			#issue_link.SOURCE TASK_ID,
+			issue_link.DESTINATION TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,
+			issue_body.* from  jiraissue issue_body
+			left join project pro
+			on issue_body.project = pro.id 
+			left join issuelink issue_link
+			on 
+			#issue_link.DESTINATION = issue_body.id 
+			issue_link.source= issue_body.id
+      left join jiraissue task_issue
+			on task_issue.id = issue_link.DESTINATION
+			) POINT_TASK
+			left join issueidwithworklog
+			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
+			#where issueidwithworklog.issueLogWork is not null
+) a
+group by a.jira_key
+having a.JIRA_KEY in ('TMSI-2140','TMSI-2811','TMSI-3291','TMSI-3686')
+
+
+
+
+
 
 
 
