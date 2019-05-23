@@ -1,25 +1,55 @@
-#####################         平均积分           ########################
-###  用队员积分排名语句进行筛选后聚合得到平均分，注意替换日期和人员   ###
+##   [目前还缺少的逻辑]查找延误的任务 延误1天扣除30%积分 3天50% 延误5天 100% ，未完成延误任务前不分配其他任务(积分)  ###
 
-select * from cwd_user
+##############                      团队平均的积分                        ####################
+select "ITHO Team except top mgr" as Team, Team_Average_View.Team_Average averagePoints from Team_Average_View
+union
+select "Developer" as Team,IT_Team_Average_View.IT_Team_Average averagePoints from IT_Team_Average_View
+union
+select "ProductManager" as Team, PM_Team_Average_View.* from PM_Team_Average_View
+union
+select "UI Team" as Team,  UI_Team_Average_View.* from UI_Team_Average_View
+union
+select "UED Team" as Team,  UED_Team_Average_View.* from UED_Team_Average_View
+union
+select "Tester" as Team, TEST_Team_Average_View.* from TEST_Team_Average_View
+union
+select "Logistic Team Developer" as Team,  Logistic_Team_Average_View.* from Logistic_Team_Average_View
+union
+select "Trade Team Developer" as Team,  Trade_Team_Average_View.* from Trade_Team_Average_View
+union
+select "Platform Team Developer" as Team,  Platform_Team_Average_View.* from Platform_Team_Average_View
+union
+select "Operation Team" as Team,  Operation_Team_Average_View.* from Operation_Team_Average_View
 
+##############                      每个人的积分                        ####################
 select * from 2019MayTeamPointsView
 
+##############                      积分任务列表                        ####################
+select concat(issue_body.project_key_value,"-",issue_body.issuenum) AS Jira_Key ,issue_body.ASSIGNEE,issue_body.*
+from JiraIssueWithWorklog issue_body
+where issue_body.actual_status in ("Done","Resolved","Closed") #状态是完成
+  and issue_body.recordworklog > 0 #有实际工时录入
+	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#计划完成时间是当月
 
 
-#####################队员积分排名(视图简化版)#########
-create VIEW 2019MayTeamPointsView as
-select cwd_user.display_name,point_res.* from cwd_user 
-left join
-2019MayTeamPointsWithoutNameView point_res
-on point_res.teamMember = cwd_user.user_name
-where cwd_user.user_name in (
+
+
+
+
+
+
+#####################        视图创建 #####################################
+#信息部全体(除管理2人，交互，视觉，运维)
+alter view Team_Average_View as
+select AVG(Points) as Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
 #   物流团队
-"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai",
+"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai","jasonyuan",
 #   贸易报关团队"
 "jason.chen","hyj","coy","alisali","aiker","anniewu","edenma",
 #   职能团队 
-"ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu",
+"ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu","徐善芹",
 # 测试团队 
 "lisa","tonya","wenguangyan","keke.shu","alice.li","elizacheng",
 #   产品经理
@@ -33,7 +63,134 @@ where cwd_user.user_name in (
 # 运维团队 
 "koala","dream","paulhu"
 )
-order by Points desc'
+
+
+#IT_Team_Average
+create view IT_Team_Average_View as
+select AVG(Points) as IT_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   物流团队
+"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai","jasonyuan",
+#   贸易报关团队"
+"jason.chen","hyj","coy","alisali","aiker","anniewu","edenma",
+#   职能团队 
+"ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu","徐善芹"
+)
+
+#PM_Team_Average
+create view PM_Team_Average_View as 
+select AVG(Points) as PM_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   产品经理
+"cindy","anne","code","juan","xiang","jacky","elsa","georgexie","ashley"
+)
+
+#TEST_Team_Average_View
+create view TEST_Team_Average_View as 
+select AVG(Points) as TEST_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+# 测试团队 
+"lisa","tonya","wenguangyan","keke.shu","alice.li","elizacheng"
+)
+#Logistic_Team_Average_View
+create view Logistic_Team_Average_View as 
+select AVG(Points) as Logistic_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   物流团队
+"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai","jasonyuan"
+)
+
+select* from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   物流团队
+"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai","jasonyuan"
+)
+
+
+#Trade_Team_Average_View
+create view Trade_Team_Average_View as 
+select AVG(Points) as Trade_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   贸易报关团队
+"jason.chen","hyj","coy","alisali","aiker","anniewu","edenma"
+)
+#Platform_Team_Average_View
+create view Platform_Team_Average_View as 
+select AVG(Points) as Platform_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   职能团队 
+"ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu","徐善芹"
+)
+
+#Operation_Team_Average_View
+create view Operation_Team_Average_View as 
+select AVG(Points) as Operation_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+# 运维团队 
+"koala","dream","paulhu"
+)
+
+#UI_Team_Average_View
+create view UI_Team_Average_View as 
+select AVG(Points) as UI_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   视觉设计
+"jack.zhu","kiki.ding"
+)
+
+#UED_Team_Average_View
+create view UED_Team_Average_View as 
+select AVG(Points) as UED_Team_Average from 2019MayTeamPointsWithoutNameView tv
+where tv.TeamMember in
+(
+#   交互设计 
+"baku","allen.chen"
+)
+
+
+
+select * from 2019MayTeamPointsView
+
+#####################队员积分排名(视图简化版)#########
+alter VIEW 2019MayTeamPointsView as
+select trim(cwd_user.display_name),point_res.* from cwd_user 
+left join
+2019MayTeamPointsWithoutNameView point_res
+on point_res.teamMember = cwd_user.user_name
+where cwd_user.user_name in (
+#   物流团队
+"wind","shaynegao","sheny","titihou","damonwang","hangwang","nicolasni","shouwencai","jasonyuan",
+#   贸易报关团队"
+"jason.chen","hyj","coy","alisali","aiker","anniewu","edenma",
+#   职能团队 
+"ying","lynen","gray","smile.yin","puyu","loriye","cedarzhong","billowwu","徐善芹",
+# 测试团队 
+"lisa","tonya","wenguangyan","keke.shu","alice.li","elizacheng",
+#   产品经理
+"cindy","anne","code","juan","xiang","jacky","elsa","georgexie","ashley",
+#   交互设计 
+"baku","allen.chen",
+#   视觉设计
+"jack.zhu","kiki.ding",
+#   业务专家 
+"william",
+# 运维团队 
+"koala","dream","paulhu",
+# 管理
+"wangyufeng","jackie"
+)
+
+
+select * from cwd_user order by id 
 
 
 
@@ -48,11 +205,8 @@ where issue_body.actual_status in ("Done","Resolved","Closed") #状态是完成
 	
 	
 	
-	#####################检查是否延误（due date - 完成时间(活动日志)）#########
 	
-	
-	
-	
+select * from JiraIssueWithWorklog
 
 #完整的积分详细视图
 ALTER VIEW JiraIssueWithWorklog as
