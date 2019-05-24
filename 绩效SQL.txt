@@ -40,18 +40,19 @@ select * from 2019MayTeamPointsView
 
 
 ###########################################################################################################
-#####      ID002   查找某个故事/故障/任务所关联的任务对应的积分和录入工时 (更新jira_key查询)          #####
-#####              (注意:不统计关联的故障和bug)                                                       #####         
+#####      ID002   统计故事/任务/维护的总积分和成本 (更新jira_key查询)                                #####
+#####              (注意:可以根据条件选择是否统计故障和bug)                                                       #####         
 ###########################################################################################################
 
-select jira_key,a.SUMMARY, body_issue_status,TASK_JIRA_KEY,task_issue_status,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
+select jira_key,a.SUMMARY,body_issue_type, body_issue_status,TASK_JIRA_KEY,task_summary,task_issue_type,task_issue_status,task_assignee,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
 (
 
-			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,POINT_TASK.issuestatus task_issue_status,b_issuestatus body_issue_status,issueidwithworklog.issueLogWork from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,POINT_TASK.issuestatus task_issue_status,b_issuestatus body_issue_status,issueidwithworklog.issueLogWork,task_summary,task_assignee,body_issue_type from 
 			(
 			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, concat(task_pro.pkey,"-",task_issue.issuenum) TASK_JIRA_KEY, 
 			issue_link.SOURCE TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation, task_issue.issuetype task_issue_type,
 			task_issue.issuestatus,issue_body.issuestatus b_issuestatus,issue_body.summary
+			,task_issue.SUMMARY task_summary, task_issue.ASSIGNEE task_assignee,issue_body.issuetype body_issue_type
 			from  jiraissue issue_body
 			left join project pro
 			on issue_body.project = pro.id 
@@ -64,14 +65,14 @@ select jira_key,a.SUMMARY, body_issue_status,TASK_JIRA_KEY,task_issue_status,cou
 			) POINT_TASK
 			left join issueidwithworklog
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
-			#where issueidwithworklog.issueLogWork is not null
 			union all
-			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,POINT_TASK.issuestatus task_issue_status,b_issuestatus body_issue_status,issueidwithworklog.issueLogWork  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,POINT_TASK.issuestatus task_issue_status,b_issuestatus body_issue_status,issueidwithworklog.issueLogWork,task_summary,task_assignee,body_issue_type from 
 			(
 			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, concat(task_pro.pkey,"-",task_issue.issuenum) TASK_JIRA_KEY, 
 						#issue_link.SOURCE TASK_ID,
 						issue_link.DESTINATION TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,task_issue.issuetype   task_issue_type,issue_body.SUMMARY,
 						task_issue.issuestatus,issue_body.issuestatus b_issuestatus 
+						,task_issue.SUMMARY task_summary, task_issue.ASSIGNEE task_assignee,issue_body.issuetype body_issue_type
 						from  jiraissue issue_body
 						left join project pro
 						on issue_body.project = pro.id 
@@ -88,10 +89,10 @@ select jira_key,a.SUMMARY, body_issue_status,TASK_JIRA_KEY,task_issue_status,cou
 ) a
 #不计算故障任务的积分和工时
 where a.task_issue_type not in (10500,10600) 
-#不计算未完成的任务
+#统计已经完成的任务
 #and a.task_issue_status in (10001,5,6)
 #可以按照故事，链接任务等灵活分组
-group by a.jira_key, a.SUMMARY, body_issue_status,TASK_JIRA_KEY
+group by a.jira_key, a.SUMMARY, body_issue_type,body_issue_status,TASK_JIRA_KEY,task_issue_type,task_assignee,task_summary 
 having a.JIRA_KEY in 
 #仓单功能
 ('TMSI-2140','TMSI-2811','TMSI-3291','TMSI-3686')
