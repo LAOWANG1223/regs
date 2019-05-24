@@ -44,54 +44,62 @@ select * from 2019MayTeamPointsView
 #####              (注意:不统计关联的故障和bug)                                                       #####         
 ###########################################################################################################
 
-select jira_key,a.SUMMARY,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
+select jira_key,a.SUMMARY, body_issue_status,TASK_JIRA_KEY,task_issue_status,count(jira_key) linked_ticket_count,sum(task_estimation)/3600/8 points,sum(issuelogwork)/3600/8 workday from 
 (
 
-			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation, task_issue_type,issueidwithworklog.*  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,POINT_TASK.issuestatus task_issue_status,b_issuestatus body_issue_status,issueidwithworklog.issueLogWork from 
 			(
-			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
+			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, concat(task_pro.pkey,"-",task_issue.issuenum) TASK_JIRA_KEY, 
 			issue_link.SOURCE TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation, task_issue.issuetype task_issue_type,
-			#issue_link.DESTINATION TASK_ID, 
-			issue_body.* from  jiraissue issue_body
+			task_issue.issuestatus,issue_body.issuestatus b_issuestatus,issue_body.summary
+			from  jiraissue issue_body
 			left join project pro
 			on issue_body.project = pro.id 
 			left join issuelink issue_link
-			on 
-			issue_link.DESTINATION = issue_body.id 
+			on issue_link.DESTINATION = issue_body.id 
 			left join jiraissue task_issue
 			on task_issue.id = issue_link.SOURCE
+			left join project task_pro
+			on task_issue.project = task_pro.id 
 			) POINT_TASK
 			left join issueidwithworklog
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
 			#where issueidwithworklog.issueLogWork is not null
 			union all
-			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,issueidwithworklog.*  from 
+			select POINT_TASK.summary,POINT_TASK.JIRA_KEY,POINT_TASK.TASK_JIRA_KEY,POINT_TASK.TASK_ID,task_estimation,task_issue_type,POINT_TASK.issuestatus task_issue_status,b_issuestatus body_issue_status,issueidwithworklog.issueLogWork  from 
 			(
-			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, 
-			#issue_link.SOURCE TASK_ID,
-			issue_link.DESTINATION TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,task_issue.issuetype    task_issue_type,
-			issue_body.* from  jiraissue issue_body
-			left join project pro
-			on issue_body.project = pro.id 
-			left join issuelink issue_link
-			on 
-			#issue_link.DESTINATION = issue_body.id 
-			issue_link.source= issue_body.id
-      left join jiraissue task_issue
-			on task_issue.id = issue_link.DESTINATION
+			select concat(pro.pkey,"-",issue_body.issuenum) JIRA_KEY, concat(task_pro.pkey,"-",task_issue.issuenum) TASK_JIRA_KEY, 
+						#issue_link.SOURCE TASK_ID,
+						issue_link.DESTINATION TASK_ID,task_issue.TIMEORIGINALESTIMATE task_estimation,task_issue.issuetype   task_issue_type,issue_body.SUMMARY,
+						task_issue.issuestatus,issue_body.issuestatus b_issuestatus 
+						from  jiraissue issue_body
+						left join project pro
+						on issue_body.project = pro.id 
+						left join issuelink issue_link
+						on issue_link.source= issue_body.id
+						left join jiraissue task_issue
+						on task_issue.id = issue_link.DESTINATION
+						left join project task_pro
+						on task_issue.project = task_pro.id 
 			) POINT_TASK
 			left join issueidwithworklog
 			on issueidwithworklog.issueid = POINT_TASK.TASK_ID
 			#where issueidwithworklog.issueLogWork is not null
 ) a
 #不计算故障任务的积分和工时
-where a.task_issue_type not in (10500,10600)
-group by a.jira_key, a.SUMMARY
+where a.task_issue_type not in (10500,10600) 
+#不计算未完成的任务
+#and a.task_issue_status in (10001,5,6)
+#可以按照故事，链接任务等灵活分组
+group by a.jira_key, a.SUMMARY, body_issue_status,TASK_JIRA_KEY
 having a.JIRA_KEY in 
 #仓单功能
 ('TMSI-2140','TMSI-2811','TMSI-3291','TMSI-3686')
 #核注请单
 #('TMSI-3290','TMSI-2627','TMSI-2898','TMSI-3685')
+
+select * from issuestatus
+# 10001 done,5 resolved, 6 closed
 
 
 
