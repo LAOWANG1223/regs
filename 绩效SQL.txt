@@ -5,7 +5,7 @@
 #[目前还缺少的逻辑]查找延误的任务 延误1天扣除30%积分 3天50% 延误5天 100% ， 未完成延误任务前不分配其他任务(积分) 
 
 alter view 2019mayteampointswithoutnameview as
-select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`TIMEORIGINALESTIMATE` / 3600) / 8)) AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-05-01') and (`issue_body`.`DUEDATE` < '2019-06-01')) group by `issue_body`.`ASSIGNEE`
+select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`TIMEORIGINALESTIMATE` / 3600) / 8))*1000 AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-05-01') and (`issue_body`.`DUEDATE` < '2019-06-01')) group by `issue_body`.`ASSIGNEE`
 
 ##############                      积分任务列表                        ####################
 select concat(issue_body.project_key_value,"-",issue_body.issuenum) AS Jira_Key ,issue_body.ASSIGNEE,issue_body.*
