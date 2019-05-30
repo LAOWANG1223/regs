@@ -103,6 +103,26 @@ select * from issuestatus
 # 10001 done,5 resolved, 6 closed
 
 
+###########################################################################################################
+#####                      ID004 检查非主管改动的到期日和积分的情况                                        #####
+###########################################################################################################
+SELECT
+concat( pro.pkey, "-", issue_body.issuenum ) JIRA_KEY,cwd_user.display_name updateby,change_group.created updateDate,
+change_item.*
+FROM
+	jiraissue issue_body
+	LEFT JOIN project pro ON issue_body.project = pro.id 
+	left join changegroup change_group on issue_body.id = change_group.issueid
+  left join changeitem change_item on change_item.groupid = change_group.id
+	left join cwd_user on cwd_user.user_name = change_group.author
+where 
+  #预估人天和到期日
+  change_item.field in ('timeoriginalestimate','duedate')
+	#非主管
+  #and cwd_user.display_name not in ('王宇峰','程龙','程光','高卫卫','吴涛','何有君') 
+	#发生变更的时间
+	and change_group.created > '2019/5/1'
+	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'TMSI-4006'
 
 
 
