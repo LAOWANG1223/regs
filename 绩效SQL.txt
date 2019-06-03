@@ -3,9 +3,9 @@
 ####################################################################################################################
 #        ID006 考虑了延误的扣除的队员汇总  （基于ID005）  
 #              1. 实际完成时间在当月(sql风险：如果多次关闭可能获取错误的时间)
-#							 2. 预估人天若超过实际录入的20%，则以实际录入人天作为预估人天。
+#	       2. 预估人天若超过实际录入的20%，则以实际录入人天作为预估人天。
 #              3. 基础积分 = 复杂度 * 预估人天,需要更新;基础积分 = 复杂度系数 * 预估人天 ,复杂度系数, 紧急1.5,高1.2，中1，低0.8, 无关紧要0.5
-#						   4. 延误扣减积分，超过整体工期的 30 %以下则扣减 30 %， 60 %以下则扣减 60 %，超过 60 %扣减 100 %    
+#		4. 延误扣减积分，超过整体工期的 30 %以下则扣减 30 %， 60 %以下则扣减 60 %，超过 60 %扣减 100 %    
 ####################################################################################################################
 select * from teampointsview20190603 
 
@@ -225,49 +225,6 @@ where
 	#发生变更的时间
 	and change_group.created > '2019/5/1'
 	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'TMSI-4006'
-
-
-#####################################################################################################################################
-## ID005 考虑了延误的扣除的明细任务列表： 过期任务扣减比例， 超过整体工期的 30 %以下则扣减 30 %， 60 %以下则扣减 60 %，超过 60 %扣减 100 %    ##### 
-#####################################################################################################################################
-
-SELECT
-concat( pro.pkey, "-", issue_body.issuenum ) JIRA_KEY,issue_body.assignee,cwd_user.display_name Doneupdateby,
-issue_body.CREATED,
-change_group.created doneDate,issue_body.duedate,issue_body
-.TIMEORIGINALESTIMATE/3600/8 ori_points
-#延误天数，小于0代表延误
-,datediff(issue_body.duedate,change_group.created) delay
-#工期
-,datediff(issue_body.duedate,issue_body.CREATED) project_duration
-#扣除后的剩余系数
-,(case when datediff(issue_body.duedate,change_group.created) >= 0 
-            then TIMEORIGINALESTIMATE/3600/8
-       when datediff(issue_body.duedate,change_group.created) < 0 
-            and ABS(datediff(issue_body.duedate,change_group.created)) <= datediff(issue_body.duedate,issue_body.CREATED)*0.3
-			 			then TIMEORIGINALESTIMATE/3600/8*0.7
-	     when datediff(issue_body.duedate,change_group.created) < 0 
-            and ABS(datediff(issue_body.duedate,change_group.created)) <= datediff(issue_body.duedate,issue_body.CREATED)*0.6
-			 			then TIMEORIGINALESTIMATE/3600/8*0.4
-	 else 0 end) act_points
-,change_item.*
-FROM
-	jiraissue issue_body
-	LEFT JOIN project pro ON issue_body.project = pro.id 
-	left join changegroup change_group on issue_body.id = change_group.issueid
-  left join changeitem change_item on change_item.groupid = change_group.id
-	left join cwd_user on cwd_user.user_name = change_group.author
-where 
-  #当前已经是完成状态'Done','Resolved','Closed'
-	issue_body.issuestatus  in (10001,5,6)
-  #找到完成时间
-  and change_item.field = 'status' and change_item.newstring in ('Done','Resolved','Closed')
-	#and issue_body.duedate > '2019/5/1' and issue_body.duedate < '2019/6/1'
-	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'TMSI-4006'
-  #and issue_body.assignee = 'aiker'
-  #limit 100
- 
- 
 
 
 ###########################################################################################################
