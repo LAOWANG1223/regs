@@ -1,3 +1,105 @@
+#################################################################################################################
+##                              
+####################################################################################################################
+#        ID006 考虑了延误的扣除的队员汇总  （基于ID005）  
+#              1. 实际完成时间在当月(sql风险：如果多次关闭可能获取错误的时间)
+#							 2. 预估人天若超过实际录入的20%，则以实际录入人天作为预估人天。
+#              3. 基础积分 = 复杂度 * 预估人天,需要更新;基础积分 = 复杂度系数 * 预估人天 ,复杂度系数, 紧急1.5,高1.2，中1，低0.8, 无关紧要0.5
+#						   4. 延误扣减积分，超过整体工期的 30 %以下则扣减 30 %， 60 %以下则扣减 60 %，超过 60 %扣减 100 %    
+####################################################################################################################
+select * from teampointsview20190603 
+
+create view teampointsview20190603 as
+select 
+#延误扣除后的积分
+cwd_user.display_name,issue_body.assignee as TeamMember
+,sum(
+(case when datediff(issue_body.duedate,issue_body.issue_doneDate) >= 0 
+            then est_adjust_points*complex_rate
+       when datediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
+            and ABS(datediff(issue_body.duedate,issue_body.issue_doneDate)) <= datediff(issue_body.duedate,issue_body.issue_createdate)*0.3
+			 			then est_adjust_points*0.7*complex_rate
+	     when datediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
+            and ABS(datediff(issue_body.duedate,issue_body.issue_doneDate)) <= datediff(issue_body.duedate,issue_body.issue_createdate)*0.6
+			 			then est_adjust_points*0.4*complex_rate
+	 else 0 end)
+) Points
+,sum(issue_body.issue_worklog) worklog
+	 	 from issueListConsiderDelayPointsDeduction issue_body
+		 left join cwd_user on cwd_user.user_name  = issue_body.assignee
+	where 
+	(`cwd_user`.`user_name` in ('wind','shaynegao','sheny','titihou','damonwang','hangwang','nicolasni','shouwencai','jasonyuan','jason.chen','hyj','coy','alisali','aiker','anniewu','edenma','ying','lynen','gray','smile.yin','puyu','loriye','cedarzhong','billowwu','lisa','tonya','wenguangyan','keke.shu','alice.li','elizacheng','cindy','anne','code','juan','xiang','jacky','elsa','georgexie','ashley','徐善芹','baku','allen.chen','jack.zhu','kiki.ding','william','koala','dream','paulhu','wangyufeng','jackie'))
+	and issue_body.issue_doneDate > '2019/5/1' and issue_body.issue_doneDate < '2019/6/1'
+	group by issue_body.assignee,cwd_user.display_name
+
+
+####################################################################################################################
+#        ID005月度的绩效积分包含如下： 
+#              1. 实际完成时间在当月(sql风险：如果多次关闭可能获取错误的时间)
+#							 2. 预估人天若超过实际录入的20%，则以实际录入人天作为预估人天。
+#              3. 基础积分 = 复杂度 * 预估人天 ,基础积分 = 复杂度系数 * 预估人天 ,复杂度系数, 紧急1.5,高1.2，中1，低0.8, 无关紧要0.5
+####################################################################################################################
+alter view issueListConsiderDelayPointsDeduction as
+SELECT
+concat( pro.pkey, "-", issue_body.issuenum ) JIRA_KEY,issue_body.recordworklog/3600/8,issue_body.TIMEORIGINALESTIMATE/3600/8,issue_body.id jira_id,issue_body.assignee,cwd_user.display_name Doneupdateby,
+issue_body.CREATED issue_createdate,
+change_group.created issue_doneDate
+,issue_body.duedate
+#录入工时
+,issue_body.recordworklog/3600/8 as issue_worklog
+,issue_body.TIMEORIGINALESTIMATE
+,issue_body.TIMEORIGINALESTIMATE/issue_body.recordworklog as overestimatedper
+#原始预估人天
+,issue_body.TIMEORIGINALESTIMATE/3600/8 ori_points
+,priority
+#复杂度系数
+,(case priority 
+      when 1 then 1.5
+      when 2 then 1.2
+			when 3 then 1
+			when 4 then 0.8
+			when 5 then 0.5
+			else 1
+			end) as complex_rate
+,(case when issue_body.TIMEORIGINALESTIMATE/issue_body.recordworklog > 1.2
+            then issue_body.recordworklog/3600/8
+						else TIMEORIGINALESTIMATE/3600/8 end) as est_adjust_points
+#延误天数，小于0代表延误
+,datediff(issue_body.duedate,change_group.created) delay
+#工期
+,datediff(issue_body.duedate,issue_body.CREATED) project_duration
+
+FROM
+	jiraissuewithworklog issue_body
+	LEFT JOIN project pro ON issue_body.project = pro.id 
+#	left join changegroup change_group on issue_body.id = change_group.issueid
+# left join changeitem change_item on change_item.groupid = change_group.id
+  left join lastestDoneDateOfissues change_group on issue_body.id = change_group.issueid
+	left join cwd_user on cwd_user.user_name = change_group.author
+where 
+  #当前已经是完成状态'Done','Resolved','Closed'
+	issue_body.issuestatus  in (10001,5,6)
+	#实际完成时间在当月
+  #and change_item.field = 'status' and change_item.newstring in ('Done','Resolved','Closed')
+	#有工时录入
+	and issue_body.recordworklog>0
+	#and change_group.created > '2019/5/1' and change_group.created < '2019/6/1'
+	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'RP-178'
+	#and assignee = 'aiker'
+  #limit 100
+
+
+#获取最近一次的点击“完成”的时间
+create view lastestDoneDateOfissues as
+ select issueid,author,Max(change_group.created) created from  
+   changegroup change_group 
+  left join changeitem change_item on change_item.groupid = change_group.id
+	where 
+	#实际完成时间在当月
+  change_item.field = 'status' and change_item.newstring in ('Done','Resolved','Closed')
+	#and issueid=18766
+	group by issueid,author
+
 ###############################################################################################################
 #####                              ID001 : 信息部绩效积分工具(注意先更新视图和任务语句的时间)           #######
 ###############################################################################################################
