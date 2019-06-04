@@ -1,3 +1,17 @@
+####################################################################################################################
+#        ID007 （ID006的明细）     
+####################################################################################################################
+select 
+cwd_user.display_name,issue_body.assignee as TeamMember,
+issue_body.*
+	 	 from issueListConsiderDelayPointsDeduction issue_body
+		 left join cwd_user on cwd_user.user_name  = issue_body.assignee
+	where 
+	(`cwd_user`.`user_name` in ('wind','shaynegao','sheny','titihou','damonwang','hangwang','nicolasni','shouwencai','jasonyuan','jason.chen','hyj','coy','alisali','aiker','anniewu','edenma','ying','lynen','gray','smile.yin','puyu','loriye','cedarzhong','billowwu','lisa','tonya','wenguangyan','keke.shu','alice.li','elizacheng','cindy','anne','code','juan','xiang','jacky','elsa','georgexie','ashley','徐善芹','baku','allen.chen','jack.zhu','kiki.ding','william','koala','dream','paulhu','wangyufeng','jackie'))
+	and issue_body.issue_doneDate > '2019/5/1' and issue_body.issue_doneDate < '2019/6/1'
+
+
+
 #################################################################################################################
 ##                              
 ####################################################################################################################
