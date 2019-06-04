@@ -151,9 +151,24 @@ select "Platform Team Developer" as Team,  Platform_Team_Average_View.* from Pla
 union
 select "Operation Team" as Team,  Operation_Team_Average_View.* from Operation_Team_Average_View
 
-##############                      每个人的积分                        ####################
-select * from 2019MayTeamPointsView
-
+##############             每个人的积分 （主管为团队的1.5倍数）                       ####################
+select * from 2019MayTeamPointsView a where a.`trim(cwd_user.display_name)` not in ('高卫卫','程龙','吴涛','程光','何有君','王宇峰','程龙') 
+union
+select '程龙' as display_name,"技术总监" as teammember,it_Team_Average*1.5 as points,"无统计" as worklog from it_Team_Average_view
+union
+select '何有君' as display_name,"货代贸易技术主管" as teammember,Trade_Team_Average*1.5 as leader_points,"无统计" as worklog from trade_team_average_view
+union
+select '高卫卫' as display_name,"物流技术主管" as teammember,logistic_Team_Average*1.5 as leader_points,"无统计" as worklog from logistic_team_average_view
+union
+select '吴涛' as display_name,"职能技术主管"  as teammember,platform_Team_Average*1.5 as leader_points,"无统计" as worklog from platform_Team_Average_view
+union
+select '程光' as display_name,"测试主管"  as teammember,test_Team_Average*1.5 as leader_points,"无统计" as worklog from test_Team_Average_view
+union
+select '王宇峰' as display_name,"产品总监"  as teammember,pm_Team_Average*1.5 as leader_points,"无统计" as worklog from pm_Team_Average_view
+union
+select '王宇峰' as display_name,"信息部负责人"  as teammember,Team_Average*1.5 as leader_points,"无统计" as worklog from Team_Average_view
+union
+select 'NA' as display_name,"运维主管"  as teammember,operation_Team_Average*1.5 as leader_points,"无统计" as worklog from operation_Team_Average_view
 
 ###########################################################################################################
 #####      ID002   统计故事/任务/维护的总积分和成本 (更新jira_key查询)                                #####
