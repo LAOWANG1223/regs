@@ -54,7 +54,7 @@ cwd_user.display_name,issue_body.assignee as TeamMember
 #              3. 基础积分 = 复杂度 * 预估人天 ,基础积分 = 复杂度系数 * 预估人天 ,复杂度系数, 紧急1.5,高1.2，中1，低0.8, 无关紧要0.5
 ####################################################################################################################
 alter view issueListConsiderDelayPointsDeduction as
-SELECT
+SELECT issuewithcomplexfield.customvalue,
 concat( pro.pkey, "-", issue_body.issuenum ) JIRA_KEY,issue_body.recordworklog/3600/8,issue_body.TIMEORIGINALESTIMATE/3600/8,issue_body.id jira_id,issue_body.assignee,cwd_user.display_name Doneupdateby,
 issue_body.CREATED issue_createdate,
 change_group.created issue_doneDate
@@ -67,12 +67,12 @@ change_group.created issue_doneDate
 ,issue_body.TIMEORIGINALESTIMATE/3600/8 ori_points
 ,priority
 #复杂度系数
-,(case priority 
-      when 1 then 1.5
-      when 2 then 1.2
-			when 3 then 1
-			when 4 then 0.8
-			when 5 then 0.5
+,(case issuewithcomplexfield.customvalue
+      when '极难' then 1
+      when '难' then 1
+			when '正常' then 1
+			when '简单' then 1
+			when '很简单' then 1
 			else 1
 			end) as complex_rate
 ,(case when issue_body.TIMEORIGINALESTIMATE/issue_body.recordworklog > 1.2
@@ -90,6 +90,8 @@ FROM
 # left join changeitem change_item on change_item.groupid = change_group.id
   left join lastestDoneDateOfissues change_group on issue_body.id = change_group.issueid
 	left join cwd_user on cwd_user.user_name = change_group.author
+	#获取复杂度字段
+	left join findCustomComplexFieldIssue issuewithcomplexfield on issue_body.id = issuewithcomplexfield.id 
 where 
   #当前已经是完成状态'Done','Resolved','Closed'
 	issue_body.issuestatus  in (10001,5,6)
@@ -100,8 +102,15 @@ where
 	#and change_group.created > '2019/5/1' and change_group.created < '2019/6/1'
 	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'RP-178'
 	#and assignee = 'aiker'
-  #limit 100
 
+
+###查找“实现复杂度”自定义字段有值的issue
+create view findCustomComplexFieldIssue as
+select issue_body.id,cf_option.customvalue from jiraissue issue_body
+  left join customfieldvalue cf_value on issue_body.id = cf_value.issue 
+  left join customfield cf_field on cf_field.id = cf_value.customfield 
+  left join customfieldoption cf_option on cf_option.id = cf_value.STRINGVALUE
+	where cf_field.cfname = '实现复杂度' 
 
 #获取最近一次的点击“完成”的时间
 create view lastestDoneDateOfissues as
