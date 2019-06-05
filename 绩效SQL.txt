@@ -68,11 +68,11 @@ change_group.created issue_doneDate
 ,priority
 #复杂度系数
 ,(case issuewithcomplexfield.customvalue
-      when '极难' then 1
-      when '难' then 1
+      when '极难' then 1.5
+      when '难' then 1.2
 			when '正常' then 1
-			when '简单' then 1
-			when '很简单' then 1
+			when '简单' then 0.8
+			when '很简单' then 0.5
 			else 1
 			end) as complex_rate
 ,(case when issue_body.TIMEORIGINALESTIMATE/issue_body.recordworklog > 1.2
@@ -101,8 +101,7 @@ where
 	and issue_body.recordworklog>0
 	#and change_group.created > '2019/5/1' and change_group.created < '2019/6/1'
 	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'RP-178'
-	#and assignee = 'aiker'
-
+#and assignee = 'aiker'
 
 ###查找“实现复杂度”自定义字段有值的issue
 create view findCustomComplexFieldIssue as
