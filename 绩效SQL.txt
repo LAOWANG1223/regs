@@ -137,8 +137,9 @@ select concat(issue_body.project_key_value,"-",issue_body.issuenum) AS Jira_Key 
 from JiraIssueWithWorklog issue_body
 where issue_body.actual_status in ("Done","Resolved","Closed") #状态是完成
   and issue_body.recordworklog > 0 #有实际工时录入
-	and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#计划完成时间是当月
-	
+and issue_body.duedate > "2019-05-01" and issue_body.duedate <"2019-06-01"#
+#任务,开发子任务,测试任务,测试子任务
+and `issue_body`.`issuetype` in ('10301','10302','10503','10504')
 ##############                      团队平均的积分                        ####################
 select "ITHO Team except top mgr" as Team, Team_Average_View.Team_Average averagePoints from Team_Average_View
 union
