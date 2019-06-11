@@ -1,6 +1,8 @@
 ####################################################################################################################
 #        ID007 （ID006的明细）     
 ####################################################################################################################
+#先更新issueListConsiderDelayPointsDeduction中日期
+
 select 
 cwd_user.display_name,issue_body.assignee as TeamMember,
 issue_body.*
@@ -8,7 +10,7 @@ issue_body.*
 		 left join cwd_user on cwd_user.user_name  = issue_body.assignee
 	where 
 	(`cwd_user`.`user_name` in ('wind','shaynegao','sheny','titihou','damonwang','hangwang','nicolasni','shouwencai','jasonyuan','jason.chen','hyj','coy','alisali','aiker','anniewu','edenma','ying','lynen','gray','smile.yin','puyu','loriye','cedarzhong','billowwu','lisa','tonya','wenguangyan','keke.shu','alice.li','elizacheng','cindy','anne','code','juan','xiang','jacky','elsa','georgexie','ashley','徐善芹','baku','allen.chen','jack.zhu','kiki.ding','william','koala','dream','paulhu','wangyufeng','jackie'))
-	and issue_body.issue_doneDate > '2019/5/1' and issue_body.issue_doneDate < '2019/6/1'
+
 
 
 
@@ -21,6 +23,7 @@ issue_body.*
 #              3. 基础积分 = 复杂度 * 预估人天,需要更新;基础积分 = 复杂度系数 * 预估人天 ,复杂度系数, 紧急1.5,高1.2，中1，低0.8, 无关紧要0.5
 #		4. 延误扣减积分，超过整体工期的 30 %以下则扣减 30 %， 60 %以下则扣减 60 %，超过 60 %扣减 100 %    
 ####################################################################################################################
+#先更新issueListConsiderDelayPointsDeduction中日期
 select * from teampointsview20190603 
 
 create view teampointsview20190603 as
@@ -39,12 +42,11 @@ cwd_user.display_name,issue_body.assignee as TeamMember
 	 else 0 end)
 ) Points
 ,sum(issue_body.issue_worklog) worklog
-	 	 from issueListConsiderDelayPointsDeduction issue_body
-		 left join cwd_user on cwd_user.user_name  = issue_body.assignee
+	 	 from cwd_user
+		 left join issueListConsiderDelayPointsDeduction issue_body on cwd_user.user_name  = issue_body.assignee
 	where 
 	(`cwd_user`.`user_name` in ('wind','shaynegao','sheny','titihou','damonwang','hangwang','nicolasni','shouwencai','jasonyuan','jason.chen','hyj','coy','alisali','aiker','anniewu','edenma','ying','lynen','gray','smile.yin','puyu','loriye','cedarzhong','billowwu','lisa','tonya','wenguangyan','keke.shu','alice.li','elizacheng','cindy','anne','code','juan','xiang','jacky','elsa','georgexie','ashley','徐善芹','baku','allen.chen','jack.zhu','kiki.ding','william','koala','dream','paulhu','wangyufeng','jackie'))
-	and issue_body.issue_doneDate > '2019/5/1' and issue_body.issue_doneDate < '2019/6/1'
-	group by issue_body.assignee,cwd_user.display_name
+	group by cwd_user.display_name,issue_body.assignee
 
 
 ####################################################################################################################
@@ -99,7 +101,8 @@ where
   #and change_item.field = 'status' and change_item.newstring in ('Done','Resolved','Closed')
 	#有工时录入
 	and issue_body.recordworklog>0
-	#and change_group.created > '2019/5/1' and change_group.created < '2019/6/1'
+	#完成时间
+	and `change_group`.`created` > '2019/6/1' and `change_group`.`created` < '2019/7/1'
 	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'RP-178'
 #and assignee = 'aiker'
 
