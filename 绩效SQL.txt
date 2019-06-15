@@ -26,11 +26,12 @@ issue_body.*
 #先更新issueListConsiderDelayPointsDeduction中日期
 select * from teampointsview20190603 
 
-create view teampointsview20190603 as
+
+alter view teampointsview20190603 as
 select 
 #延误扣除后的积分
 cwd_user.display_name,issue_body.assignee as TeamMember
-,sum(
+,1000*sum(
 (case when datediff(issue_body.duedate,issue_body.issue_doneDate) >= 0 
             then est_adjust_points*complex_rate
        when datediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
@@ -46,8 +47,7 @@ cwd_user.display_name,issue_body.assignee as TeamMember
 		 left join issueListConsiderDelayPointsDeduction issue_body on cwd_user.user_name  = issue_body.assignee
 	where 
 	(`cwd_user`.`user_name` in ('wind','shaynegao','sheny','titihou','damonwang','hangwang','nicolasni','shouwencai','jasonyuan','jason.chen','hyj','coy','alisali','aiker','anniewu','edenma','ying','lynen','gray','smile.yin','puyu','loriye','cedarzhong','billowwu','lisa','tonya','wenguangyan','keke.shu','alice.li','elizacheng','cindy','anne','code','juan','xiang','jacky','elsa','georgexie','ashley','徐善芹','baku','allen.chen','jack.zhu','kiki.ding','william','koala','dream','paulhu','wangyufeng','jackie'))
-	group by cwd_user.display_name,issue_body.assignee
-
+group by cwd_user.display_name,issue_body.assignee
 
 ####################################################################################################################
 #        ID005月度的绩效积分包含如下： 
@@ -126,10 +126,10 @@ create view lastestDoneDateOfissues as
 	group by issueid,author
 
 ###############################################################################################################
-#####                              ID001 : 信息部绩效积分工具(注意先更新视图和任务语句的时间)           #######
+#####                              ID001 : 信息部绩效积分工具(注意先更新视图和任务语句的时间)     老板版本      #######
 ###############################################################################################################
-
-#[目前还缺少的逻辑]查找延误的任务 延误1天扣除30%积分 3天50% 延误5天 100% ， 未完成延误任务前不分配其他任务(积分) 
+select * from 2019MayTeamPointsView order by points desc
+#注意先更新积分日期
 
 alter view 2019mayteampointswithoutnameview as
 select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`TIMEORIGINALESTIMATE` / 3600) / 8))*1000 AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-05-01') and (`issue_body`.`DUEDATE` < '2019-06-01')) group by `issue_body`.`ASSIGNEE`
