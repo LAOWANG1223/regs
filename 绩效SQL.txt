@@ -30,7 +30,7 @@ alter view teampointsview20190603 as
 select 
 #延误扣除后的积分
 cwd_user.display_name,issue_body.assignee as TeamMember
-,1000*sum(
+,sum(
 (case when datediff(issue_body.duedate,issue_body.issue_doneDate) >= 0 
             then est_adjust_points*complex_rate
        when datediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
@@ -132,7 +132,7 @@ select * from 2019MayTeamPointsView order by points desc
 #注意先更新积分日期
 
 alter view 2019mayteampointswithoutnameview as
-select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`TIMEORIGINALESTIMATE` / 3600) / 8))*1000 AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-05-01') and (`issue_body`.`DUEDATE` < '2019-06-01')) group by `issue_body`.`ASSIGNEE`
+select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`TIMEORIGINALESTIMATE` / 3600) / 8)) AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-05-01') and (`issue_body`.`DUEDATE` < '2019-06-01')) group by `issue_body`.`ASSIGNEE`
 
 ##############                      积分任务列表                        ####################
 select concat(issue_body.project_key_value,"-",issue_body.issuenum) AS Jira_Key ,issue_body.ASSIGNEE,issue_body.*
