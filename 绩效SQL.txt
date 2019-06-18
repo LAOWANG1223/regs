@@ -102,6 +102,8 @@ where
   #and change_item.field = 'status' and change_item.newstring in ('Done','Resolved','Closed')
 	#有工时录入
 	and issue_body.recordworklog>0
+		#只需要任务类型的问题
+	and issue_body.issuetype in ('10301','10302','10503','10504')
 	#完成时间
 	#and `change_group`.`created` > '2019/6/1' and `change_group`.`created` < '2019/7/1'
 	#and concat( pro.pkey, "-", issue_body.issuenum ) = 'RP-178'
