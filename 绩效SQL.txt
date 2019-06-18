@@ -31,13 +31,13 @@ select
 #延误扣除后的积分
 cwd_user.display_name,issue_body.assignee as TeamMember
 ,sum(
-(case when datediff(issue_body.duedate,issue_body.issue_doneDate) >= 0 
+(case when timediff(issue_body.duedate,issue_body.issue_doneDate) >= 0 
             then est_adjust_points*complex_rate
-       when datediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
-            and ABS(datediff(issue_body.duedate,issue_body.issue_doneDate)) <= datediff(issue_body.duedate,issue_body.issue_createdate)*0.3
+       when timediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
+            and ABS(timediff(issue_body.duedate,issue_body.issue_doneDate)) <= timediff(issue_body.duedate,issue_body.issue_createdate)*0.3
 			 			then est_adjust_points*0.7*complex_rate
-	     when datediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
-            and ABS(datediff(issue_body.duedate,issue_body.issue_doneDate)) <= datediff(issue_body.duedate,issue_body.issue_createdate)*0.6
+	     when timediff(issue_body.duedate,issue_body.issue_doneDate) < 0 
+            and ABS(timediff(issue_body.duedate,issue_body.issue_doneDate)) <= timediff(issue_body.duedate,issue_body.issue_createdate)*0.6
 			 			then est_adjust_points*0.4*complex_rate
 	 else 0 end)
 ) Points
@@ -48,7 +48,6 @@ cwd_user.display_name,issue_body.assignee as TeamMember
 	#完成时间
 issue_body.issue_doneDate > '2019/6/1' and issue_body.issue_doneDate < '2019/7/1'
 group by cwd_user.display_name,issue_body.assignee
-
 ####################################################################################################################
 #        ID005月度的绩效积分包含如下： 
 #              1. 实际完成时间在当月
