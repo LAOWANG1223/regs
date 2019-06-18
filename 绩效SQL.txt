@@ -61,6 +61,7 @@ concat( pro.pkey, "-", issue_body.issuenum ) JIRA_KEY,issue_body.recordworklog/3
 issue_body.CREATED issue_createdate,
 change_group.created issue_doneDate
 ,issue_body.duedate
+,issue_body.summary
 #录入工时
 ,issue_body.recordworklog/3600/8 as issue_worklog
 ,issue_body.TIMEORIGINALESTIMATE
