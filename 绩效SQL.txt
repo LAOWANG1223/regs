@@ -107,7 +107,6 @@ create view lastestDoneDateOfissues as
 #先更新视图中的中的日期，积分和工时都没有的人不会出现
 select * from teampointsview20190603 
 
-
 alter view teampointsview20190603 as
 select 
 #延误扣除后的积分
@@ -130,8 +129,9 @@ cwd_user.display_name,issue_body.assignee as TeamMember
 		 left join issueListConsiderDelayPointsDeduction issue_body on cwd_user.user_name  = issue_body.assignee
 	where 
 	#完成时间
-issue_body.issue_doneDate > '2019/6/1' and issue_body.issue_doneDate < '2019/7/1'
+issue_body.issue_doneDate >= '2019/6/1' and issue_body.issue_doneDate < '2019/7/1'
 group by cwd_user.display_name,issue_body.assignee
+
 
 
 ###############################################################################################################
@@ -139,12 +139,13 @@ group by cwd_user.display_name,issue_body.assignee
 ###############################################################################################################
 select * from 2019MayTeamPointsView order by points desc
 #注意先更新积分日期
-	
+
 alter view 2019mayteampointswithoutnameview as
-select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`est_adjust_points`))) AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` > '2019-06-01') and (`issue_body`.`DUEDATE` < '2019-07-01') 
+select `issue_body`.`ASSIGNEE` AS `TeamMember`,sum(((`issue_body`.`est_adjust_points`))) AS `Points`,sum(((`issue_body`.`RecordWorklog` / 3600) / 8)) AS `worklog` from `jiraissuewithworklog` `issue_body` where ((`issue_body`.`actual_status` in ('Done','Resolved','Closed')) and (`issue_body`.`RecordWorklog` > 0) and (`issue_body`.`DUEDATE` >= '2019-06-01') and (`issue_body`.`DUEDATE` < '2019-07-01') 
 #任务,开发子任务,测试任务,测试子任务	
 and  `issue_body`.`issuetype` IN ( '10301', '10302', '10503', '10504' )
 ) group by `issue_body`.`ASSIGNEE`
+
 
 
 ##############                      积分任务列表                        ####################
