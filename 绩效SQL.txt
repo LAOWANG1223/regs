@@ -131,6 +131,18 @@ cwd_user.display_name,issue_body.assignee as TeamMember
 issue_body.issue_doneDate >= '2019/6/1' and issue_body.issue_doneDate < '2019/7/1'
 group by cwd_user.display_name,issue_body.assignee
 
+#创建视图，获取最后一次点击完成的人员和时间 - 这个语句有故障，如果有2个人点击过完成，则会出来2条记录。
+CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER = `mysql`@`%` SQL SECURITY DEFINER VIEW `jira`.`lastestdonedateofissues` AS SELECT
+	`change_group`.`issueid` AS `issueid`,
+	`change_group`.`AUTHOR` AS `author`,
+	max( `change_group`.`CREATED` ) AS `created` 
+FROM
+	( `changegroup` `change_group` LEFT JOIN `changeitem` `change_item` ON ( ( `change_item`.`groupid` = `change_group`.`ID` ) ) ) 
+WHERE
+	( ( `change_item`.`FIELD` = 'status' ) AND ( `change_item`.`NEWSTRING` IN ( 'Done', 'Resolved', 'Closed' ) ) ) 
+GROUP BY
+	`change_group`.`issueid`,
+	`change_group`.`AUTHOR`;
 
 
 ###############################################################################################################
