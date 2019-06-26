@@ -82,15 +82,19 @@ select issue_body.id,cf_option.customvalue from jiraissue issue_body
 	where cf_field.cfname = '实现复杂度' 
 
 #获取最近一次的点击“完成”的时间
-create view lastestDoneDateOfissues as
- select issueid,author,Max(change_group.created) created from  
+alter view lastestDoneDateOfissues  as
+select c1.issueid,c2.author,c1.created from findlatestDoneDate c1
+left join changegroup c2 on c1.issueid = c2.issueid and c1.CREATED = c2.created
+
+
+create view findlatestDoneDate as
+ select issueid,Max(change_group.created) created from  
    changegroup change_group 
   left join changeitem change_item on change_item.groupid = change_group.id
 	where 
-	#实际完成时间在当月
   change_item.field = 'status' and change_item.newstring in ('Done','Resolved','Closed')
 	#and issueid=18766
-	group by issueid,author
+	group by issueid
 	
 	
 	
