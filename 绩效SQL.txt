@@ -1,3 +1,36 @@
+
+##计划
+select assignee,curdate(),count(issuenum) due_tickets,sum(TIMEORIGINALESTIMATE/3600/8) plan_points 
+from jiraissue a
+where 
+#当日到期任务数量和预计积分
+duedate = curdate()
+#当周到期任务数量和预计积分
+#duedate>=subdate(curdate(),date_format(curdate(),'%w')-1)
+#and duedate<=subdate(curdate(),date_format(curdate(),'%w')-7)
+#当月到期任务数量和预计积分
+#duedate>=DATE_ADD(curdate(),interval -day(curdate())+1 day)
+#and duedate<=last_day(curdate())
+and issuetype in ('10301','10302','10503','10504')
+group by assignee
+
+##实际
+select assignee,curdate(),count(issuenum) due_tickets,sum(TIMEORIGINALESTIMATE/3600/8) plan_points 
+from lastestdonedateofissues done_issue
+left join jiraissue a  on a.id = done_issue.issueid
+where 
+#当日实际完成的任务数量和预计积分
+DATE_FORMAT(done_issue.created,'%m-%d-%Y')= DATE_FORMAT(curdate(),'%m-%d-%Y')
+#当周实际完成的任务数量和预计积分
+#done_issue.created>=subdate(curdate(),date_format(curdate(),'%w')-1)
+#and done_issue.created<=subdate(curdate(),date_format(curdate(),'%w')-7)
+#当月实际完成的任务数量和预计积分
+#done_issue.CREATED>=DATE_ADD(curdate(),interval -day(curdate())+1 day)
+#and done_issue.CREATED<=last_day(curdate())
+and a.issuetype in ('10301','10302','10503','10504')
+group by assignee
+
+
 ####################################################################################################################
 #        ID007 （ID006的明细）     
 ####################################################################################################################
