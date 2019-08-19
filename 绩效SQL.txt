@@ -11,7 +11,7 @@ duedate = curdate()
 #当月到期任务数量和预计积分
 #duedate>=DATE_ADD(curdate(),interval -day(curdate())+1 day)
 #and duedate<=last_day(curdate())
-and issuetype in ('10301','10302','10503','10504')
+and issuetype in ('10301','10302','10503','10504','10600')
 group by assignee
 
 ##实际
@@ -27,7 +27,7 @@ DATE_FORMAT(done_issue.created,'%m-%d-%Y')= DATE_FORMAT(curdate(),'%m-%d-%Y')
 #当月实际完成的任务数量和预计积分
 #done_issue.CREATED>=DATE_ADD(curdate(),interval -day(curdate())+1 day)
 #and done_issue.CREATED<=last_day(curdate())
-and a.issuetype in ('10301','10302','10503','10504')
+and a.issuetype in ('10301','10302','10503','10504','10600')
 group by assignee
 
 
@@ -101,7 +101,7 @@ where
 	#有工时录入
 	and issue_body.recordworklog>0
 		#只需要任务类型的问题
-	and issue_body.issuetype in ('10301','10302','10503','10504')
+	and issue_body.issuetype in ('10301','10302','10503','10504','10600')
 	#完成时间
 	#and `change_group`.`created` > '2019/6/1' and `change_group`.`created` < '2019/7/1' and concat( pro.pkey, "-", issue_body.issuenum ) = 'PMO-539'
 #and assignee = 'aiker'
